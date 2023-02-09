@@ -12,7 +12,7 @@ public interface UserService {
    * 获取获取的二维码
    * @param wsLoginToken 用于登录的wsLoginToken
    * @param httpSession httpSession
-   * @return 用于触发回调的uuid
+   * @return 二维码图片地址
    */
   String getLoginQrCode(String wsLoginToken, HttpSession httpSession);
 

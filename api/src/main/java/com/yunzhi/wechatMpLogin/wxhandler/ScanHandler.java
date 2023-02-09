@@ -9,6 +9,8 @@ import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,7 @@ import java.util.Map;
  */
 @Service
 public class ScanHandler extends AbstractHandler {
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
   final WeChatUserRepository weChatUserRepository;
 
   final WechatService wechatService;
@@ -41,7 +44,6 @@ public class ScanHandler extends AbstractHandler {
    * 事理key事件
    */
   private WxMpXmlOutMessage handleKey(WeChatUser weChatUser, WxMpXmlMessage wxMpXmlMessage) {
-    System.out.println("scan事件");
     return this.handleByEventKey(wxMpXmlMessage.getEventKey(), weChatUser, wxMpXmlMessage);
   }
 }

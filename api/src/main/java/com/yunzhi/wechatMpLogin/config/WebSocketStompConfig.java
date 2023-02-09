@@ -54,7 +54,6 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void configureClientInboundChannel(ChannelRegistration registration) {
     registration.interceptors(new ChannelInterceptor() {
-      private final Logger logger = LoggerFactory.getLogger(this.getClass());
       @Override
       public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor =
@@ -75,7 +74,7 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
    */
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
-    // 设置入口前缀，处理所有以stomp打头的请求
+    // 设置入口前缀，处理所有以app打头的请求
     config.setApplicationDestinationPrefixes("/app");
     // 设置出口前缀，处理所有以/stomp打头的出口数据
     config.enableSimpleBroker("/stomp");

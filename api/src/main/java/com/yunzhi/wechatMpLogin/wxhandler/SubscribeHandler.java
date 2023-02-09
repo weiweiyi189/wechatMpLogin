@@ -37,7 +37,6 @@ public class SubscribeHandler extends AbstractHandler {
                                   Map<String, Object> context,
                                   WxMpService wxMpService,
                                   WxSessionManager sessionManager) throws WxErrorException {
-    this.logger.info("新关注用户 OPENID: " + wxMessage.getFromUser());
     if (this.logger.isDebugEnabled()) {
       this.logger.info("新关注用户 OPENID: " + wxMessage.getFromUser());
     }

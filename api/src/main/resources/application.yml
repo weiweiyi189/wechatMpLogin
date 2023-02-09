@@ -25,6 +25,5 @@ wx:
   mp:
     appid: xxxxxxx
     secret: xxxxxxx
-#    token随便输， 和微信公众号配置一样就星
     token: yunzhi
     aesKey: 123

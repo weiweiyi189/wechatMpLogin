@@ -62,13 +62,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   }
 
   /**
-   * 将webSocket的uuid与微信用户绑定在一起
-   * 前端微信用户扫码成功后，将使用uuid进行登录，而登录是否成功，登录是哪个用户，取决于当前方法wsUuid与哪个微个用户绑定在一起了
-   * @param wsUuid wsUuid
+   * 将loginUid与微信用户绑定在一起
+   * 前端微信用户扫码成功后，将使用loginUid进行登录，而登录是否成功，登录是哪个用户，取决于当前方法loginUid与哪个微个用户绑定在一起了
+   * @param loginUid loginUid
    * @param weChatUser 微信用户
    */
-  void bindWsUuidToWeChatUser(String wsUuid, WeChatUser weChatUser) {
-    this.map.put(wsUuid, weChatUser.getUsername());
+  void bindWsUuidToWeChatUser(String loginUid, WeChatUser weChatUser) {
+    this.map.put(loginUid, weChatUser.getUsername());
   }
 
 
@@ -81,14 +81,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   public String generateBindQrCode(String sessionId) {
     try {
       if (this.logger.isDebugEnabled()) {
-        this.logger.info("1. 生成用于回调的uuid，请将推送给微信，微信当推送带有UUID的二维码，用户扫码后微信则会把带有uuid的信息回推过来");
+        this.logger.info("1. 生成用于回调的sceneStr，请将推送给微信，微信当推送带有sceneStr的二维码，用户扫码后微信则会把带有sceneStr的信息回推过来");
       }
-      String uuid = UUID.randomUUID().toString();
-      WxMpQrCodeTicket wxMpQrCodeTicket = this.wxMpService.getQrcodeService().qrCodeCreateTmpTicket(uuid, 10 * 60);
+      // 生成临时二维码场景值，之后微信回调信息会回发该值，根据此值调用handler
+      // 例如ScanHandler的handleKey函数， 那里的wxMpXmlMessage.getEventKey()的值，就是该场景值
+      String sceneStr = UUID.randomUUID().toString();
+
+      WxMpQrCodeTicket wxMpQrCodeTicket = this.wxMpService.getQrcodeService().qrCodeCreateTmpTicket(sceneStr, 10 * 60);
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-      this.wxMpService.addHandler(uuid, new WeChatMpEventKeyHandler() {
+      this.wxMpService.addHandler(sceneStr, new WeChatMpEventKeyHandler() {
         long beginTime = System.currentTimeMillis();
         private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -100,8 +103,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         @Override
         public WxMpXmlOutMessage handle(WxMpXmlMessage wxMpXmlMessage, WeChatUser weChatUser) {
           if (this.logger.isDebugEnabled()) {
-            this.logger.info("用户扫码后通过uuid触发该方法。1. 向前台发送已扫描成功。 2. 向微信发送绑定成功的信息");
+            this.logger.info("用户扫码后通过sceneStr触发该方法。1. 向前台发送已扫描成功。 2. 向微信发送绑定成功的信息");
           }
+          // 微信用户的id
           String openid = wxMpXmlMessage.getFromUser();
           if (openid == null) {
             this.logger.error("openid is null");
@@ -150,11 +154,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   public String getLoginQrCode(String wsLoginToken, HttpSession httpSession) {
     try {
       if (this.logger.isDebugEnabled()) {
-        this.logger.info("1. 生成用于回调的uuid，请将推送给微信，微信当推送带有UUID的二维码，用户扫码后微信则会把带有uuid的信息回推过来");
+        this.logger.info("1. 生成用于回调的sceneStr，请将推送给微信，微信当推送带有sceneStr的二维码，用户扫码后微信则会把带有sceneStr的信息回推过来");
       }
-      String qrUuid = UUID.randomUUID().toString();
-      WxMpQrCodeTicket wxMpQrCodeTicket = this.wxMpService.getQrcodeService().qrCodeCreateTmpTicket(qrUuid, 10 * 60);
-      this.wxMpService.addHandler(qrUuid, new WeChatMpEventKeyHandler() {
+      // 生成临时二维码场景值，之后微信回调信息会回发该值，根据此值调用handler
+      // 例如ScanHandler的handleKey函数， 那里的wxMpXmlMessage.getEventKey()的值，就是该场景值
+      String sceneStr = UUID.randomUUID().toString();
+      WxMpQrCodeTicket wxMpQrCodeTicket = this.wxMpService.getQrcodeService().qrCodeCreateTmpTicket(sceneStr, 10 * 60);
+      this.wxMpService.addHandler(sceneStr, new WeChatMpEventKeyHandler() {
         long beginTime = System.currentTimeMillis();
         private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -172,19 +178,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         @Override
         public WxMpXmlOutMessage handle(WxMpXmlMessage wxMpXmlMessage, WeChatUser weChatUser) {
           if (this.logger.isDebugEnabled()) {
-            this.logger.info("2. 用户扫描后触发该方法, 发送扫码成功的同时，将wsUuid与微信用户绑定在一起，用后面使用wsU");
+            this.logger.info("2. 用户扫描后触发该方法, 发送扫码成功的同时，将loginUid与微信用户绑定在一起，后面使用loginUid登录");
           }
+          // 微信用户的id
           String openid = wxMpXmlMessage.getFromUser();
           if (openid == null) {
             this.logger.error("openid is null");
           }
 
           if (weChatUser.getUser() != null) {
-            String uuid = UUID.randomUUID().toString();
-            bindWsUuidToWeChatUser(uuid, weChatUser);
+            // 登录凭证 前台凭该loginUid作为用户名和密码登录
+            String loginUid = UUID.randomUUID().toString();
+            bindWsUuidToWeChatUser(loginUid, weChatUser);
             simpMessagingTemplate.convertAndSendToUser(wsLoginToken,
                 "/stomp/scanLoginQrCode",
-                uuid);
+                    loginUid);
             return new TextBuilder().build(String.format("登录成功，登录的用户为： %s", weChatUser.getUser().getName()),
                 wxMpXmlMessage,
                 null);

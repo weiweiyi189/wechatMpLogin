@@ -94,16 +94,17 @@ public class WeChatMpService extends WxMpServiceImpl {
   }
 
   /**
-   * 通过uuid来获取对应的处理器
-   * @param uuid 每个二维码都对应一个维一的uuid
+   * 通过场景值来获取对应的处理器
+   * @param sceneStr 每个二维码都对应一个维一的场景值sceneStr
+   * 该sceneStr是创建ticket时的参数
    * @return 事件处理器
    */
-  public WeChatMpEventKeyHandler getHandler(String uuid) {
-    this.logger.info("key:" + uuid);
+  public WeChatMpEventKeyHandler getHandler(String sceneStr) {
+    this.logger.info("key:" + sceneStr);
     this.randomRemoveExpiredHandler();
-    WeChatMpEventKeyHandler weChatMpEventKeyHandler = this.hashMap.get(uuid);
+    WeChatMpEventKeyHandler weChatMpEventKeyHandler = this.hashMap.get(sceneStr);
     if (weChatMpEventKeyHandler != null && weChatMpEventKeyHandler.getExpired()) {
-      this.hashMap.remove(uuid);
+      this.hashMap.remove(sceneStr);
       weChatMpEventKeyHandler = null;
     }
     return weChatMpEventKeyHandler;

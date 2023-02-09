@@ -42,7 +42,7 @@ public class myBCryptPasswordEncoder extends BCryptPasswordEncoder {
      * 微信用户验证
      */
     public boolean myMatches(CharSequence rawPassword, String encodedPassword) {
-        // 增加微信扫码后使用webSocket uuid充当用户名与密码进行认证
+        // 增加微信扫码后使用webSocket loginUid充当用户名与密码进行认证
         if (this.userService.checkWeChatLoginUuidIsValid(rawPassword.toString())) {
             if (this.logger.isDebugEnabled()) {
                 this.logger.info("校验微信扫码登录成功");
