@@ -23,7 +23,8 @@ server:
 # 公众号配置， 换成自己的配置
 wx:
   mp:
-    appid: wxaf7fe05a8ac03b66
-    secret: 57b48fcec2d5db1ad3a0810eae4cc658
+    appid: xxxxxxx
+    secret: xxxxxxx
+#    token随便输， 和微信公众号配置一样就星
     token: yunzhi
     aesKey: 123
