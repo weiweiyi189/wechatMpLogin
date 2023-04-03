@@ -16,19 +16,10 @@ public class WeChatUser implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-
-  /**
-   * 用于获取与微信后台交换当前用户加密信息的密钥，该密钥不定期过期，过期后应该重新使用code更新
-   */
-  @Transient
-  @JsonView(SessionKeyJsonView.class)
-  private String sessionKey;
-
+  
   @Column(nullable = false)
   private String openid;
-
-  @JsonView(UnionIdJsonView.class)
-  private String unionId;
+  
 
   @Column(nullable = false)
   private String appId;
@@ -39,11 +30,7 @@ public class WeChatUser implements UserDetails {
   @OneToOne
   @JsonView(UserJsonView.class)
   private User user;
-
-  /**
-   * 是否注册用户
-   */
-  private boolean registered = false;
+  
 
   public WeChatUser() {
   }
@@ -70,7 +57,6 @@ public class WeChatUser implements UserDetails {
   }
 
   public void setUser(User user) {
-    this.registered = user.getId() != null;
     this.user = user;
   }
 
@@ -82,13 +68,6 @@ public class WeChatUser implements UserDetails {
     return this.openid;
   }
 
-  public String getSessionKey() {
-    return sessionKey;
-  }
-
-  public void setSessionKey(String sessionKey) {
-    this.sessionKey = sessionKey;
-  }
 
   @Override
   public String getPassword() {

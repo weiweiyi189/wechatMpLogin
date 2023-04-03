@@ -24,13 +24,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -83,48 +81,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
       if (this.logger.isDebugEnabled()) {
         this.logger.info("1. 生成用于回调的sceneStr，请将推送给微信，微信当推送带有sceneStr的二维码，用户扫码后微信则会把带有sceneStr的信息回推过来");
       }
-      // 生成临时二维码场景值，之后微信回调信息会回发该值，根据此值调用handler
-      // 例如ScanHandler的handleKey函数， 那里的wxMpXmlMessage.getEventKey()的值，就是该场景值
-      String sceneStr = UUID.randomUUID().toString();
 
-      WxMpQrCodeTicket wxMpQrCodeTicket = this.wxMpService.getQrcodeService().qrCodeCreateTmpTicket(sceneStr, 10 * 60);
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-      this.wxMpService.addHandler(sceneStr, new WeChatMpEventKeyHandler() {
-        long beginTime = System.currentTimeMillis();
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
+      final Map<String, String> variables = new HashMap<>();
+      variables.put("username", userDetails.getUsername());
+      variables.put("sessionId", sessionId);
 
-        @Override
-        public boolean getExpired() {
-          return System.currentTimeMillis() - beginTime > 10 * 60 * 1000;
-        }
+      String requestUrl = UserServiceImpl.addParam("http:/localhost:8082/request/getQrCode", variables);
 
-        @Override
-        public WxMpXmlOutMessage handle(WxMpXmlMessage wxMpXmlMessage, WeChatUser weChatUser) {
-          if (this.logger.isDebugEnabled()) {
-            this.logger.info("用户扫码后通过sceneStr触发该方法。1. 向前台发送已扫描成功。 2. 向微信发送绑定成功的信息");
-          }
-          // 微信用户的id
-          String openid = wxMpXmlMessage.getFromUser();
-          if (openid == null) {
-            this.logger.error("openid is null");
-          }
+      System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2,SSLv3");
 
-          bindWeChatUserToUser(weChatUser, userDetails);
+      RestTemplate restTemplate = new RestTemplate();
+      String bindQrCode = restTemplate.getForObject(requestUrl, String.class, variables);
 
-          String wsToken = webSocketService.getWsToken(sessionId);
-          this.logger.info("wsToken:" + wsToken);
-          simpMessagingTemplate.convertAndSendToUser(wsToken,
-              "/stomp/scanBindUserQrCode",
-              openid);
-
-          return new TextBuilder().build(String.format("您当前的微信号已与系统用户 %s 成功绑定。", userDetails.getUsername()),
-              wxMpXmlMessage,
-              null);
-        }
-      });
-      return this.wxMpService.getQrcodeService().qrCodePictureUrl(wxMpQrCodeTicket.getTicket());
+      return bindQrCode;
     } catch (Exception e) {
       this.logger.error("获取临时公众号图片时发生错误：" + e.getMessage());
     }
@@ -132,11 +104,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
   }
 
   @Transactional
-  void bindWeChatUserToUser(WeChatUser weChatUser, UserDetails userDetails) {
+  @Override
+  public void bindWeChatUserToUser(WeChatUser weChatUser, String username, String sessionId, String openId) {
     WeChatUser wechat = this.weChatUserRepository.findById(weChatUser.getId()).get();
-    User user = this.userRepository.findByUsername(userDetails.getUsername()).get();
+    User user = this.userRepository.findByUsername(username).get();
     wechat.setUser(user);
     this.weChatUserRepository.save(wechat);
+
+    String wsToken = webSocketService.getWsToken(sessionId);
+    this.logger.info("wsToken:" + wsToken);
+    simpMessagingTemplate.convertAndSendToUser(wsToken,
+            "/stomp/scanBindUserQrCode",
+            openId);
   }
 
 
@@ -247,5 +226,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
     return new org.springframework.security.core.userdetails.User(username, user.getPassword(), authorities);
+  }
+
+  static public String addParam(String url , Map<String, String> variables) {
+    String requestUrl = url;
+    String symbol = "?";
+
+    // 添加url参数格式
+    for (Map.Entry<String, String> entry : variables.entrySet()) {
+      requestUrl = requestUrl + symbol + entry.getKey() + "={" + entry.getKey() + "}";
+      symbol = "&";
+    }
+
+    return requestUrl;
   }
 }
