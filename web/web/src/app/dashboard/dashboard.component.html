@@ -1,0 +1,54 @@
+<div class="container-md" *ngIf="user">
+  <div class="row" style="margin-top: 10px;">
+    <div class="col-4 text-right"> 姓名:</div>
+    <div class="col-8 ">{{user.name }}</div>
+  </div>
+  <div class="row">
+    <div class="col-4 text-right">
+      电话:
+    </div>
+    <div class="col-8">
+      {{user.username }}
+    </div>
+    <br>
+  </div>
+  <div class="row">
+    <div class="col-4 text-right">
+      微信绑定:
+    </div>
+    <div class="col-8">
+      <span *ngIf="user.weChatUser?.openid" class="text-success">是</span>
+      <span *ngIf="!user.weChatUser?.openid" class="text-secondary">否</span>
+    </div>
+    <br>
+  </div>
+  <div class="offset-4 col-4" style="margin-top: 20px">
+    <button class="btn btn-outline-primary btn-sm" (click)="onBindWeChat()">
+      绑定微信
+    </button>
+    <button class="btn btn-outline-secondary btn-sm ml-3" (click)="onLogout()">
+      退出登录
+    </button>
+  </div>
+</div>
+
+
+<app-yz-modal *ngIf="isShowQrCode" width="400px">
+  <div class="row">
+    <div class="col text-center">
+      请打开微信扫描二维码
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12 text-center">
+      <img class="img-thumbnail" [src]="qrCodeSrc"/>
+    </div>
+  </div>
+  <div class="row mb-2">
+    <div class="col-12 text-right">
+      <button class="btn btn-primary mr-2 mt-2" (click)="onClose()">关闭</button>
+    </div>
+  </div>
+</app-yz-modal>
+
+

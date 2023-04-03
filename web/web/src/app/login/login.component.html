@@ -1,0 +1,43 @@
+<div class="header">
+
+</div>
+<div class="main col-3">
+  <div class="main-login-warp">
+    <div class="login bg-white p-5">
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <ng-container *ngIf="loginModel === 'username'">
+          <div class="form-group">
+            <label for="exampleInputEmail1">手机号码</label>
+            <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                   formControlName="username">
+            <small id="emailHelp" class="form-text text-muted">若无法登录，请查看文件夹下的readme.md文件</small>
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">密码</label>
+            <input type="password" class="form-control" id="exampleInputPassword1" formControlName="password">
+          </div>
+          <ng-template [ngIf]="errorInfo">
+            <hr>
+            <small class="text-danger">{{ errorInfo }}</small>
+          </ng-template>
+          <button class="btn btn-block btn-primary">登 录</button>
+          <button type="button" class="btn btn-block btn-success" (click)="onWeChatLogin()">微信登录</button>
+        </ng-container>
+        <ng-container *ngIf="loginModel === 'wechat'">
+          <img class="img-fluid" [src]="qrCodeSrc">
+          <button type="button" class="btn btn-block btn-primary" (click)="loginModel = 'username'">密码登录</button>
+        </ng-container>
+      </form>
+    </div>
+  </div>
+  <div class="carousel slide" data-ride="carousel">
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner" role="listbox">
+      <div class="item image1">
+        <div class="carousel-caption">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

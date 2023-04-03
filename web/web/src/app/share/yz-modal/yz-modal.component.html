@@ -1,0 +1,10 @@
+<div class="modal fade show bd-example-modal-{{size}}" tabindex="-1" style="display: block; padding-right: 15px; ">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-{{size}}"
+       role="document"
+  [ngStyle]="{'max-width': width}">
+    <div class="modal-content">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show"></div>

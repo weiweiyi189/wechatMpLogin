@@ -1,0 +1,9 @@
+@media(min-width: 992px) {
+  .modal-lg, .modal-xl {
+    max-width: 80%;
+  }
+}
+
+.modal-dialog-scrollable .modal-body {
+  overflow-x: hidden;
+}
